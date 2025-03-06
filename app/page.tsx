@@ -1,101 +1,173 @@
-import Image from "next/image";
+"use client"
+import React, { useState } from 'react';
+import { Cron } from 'croner';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
-export default function Home() {
+const CronConverter: React.FC = () => {
+  const [cronExpression, setCronExpression] = useState<string>('');
+  const [nextExecution, setNextExecution] = useState<string | null>(null);
+  const [frequency, setFrequency] = useState<string>('');
+  const [error, setError] = useState<string>('');
+
+  const convertCronToNextExecution = () => {
+    try {
+
+      const trimmedExpression = cronExpression.trim();
+      if (!trimmedExpression) {
+        setError('Please enter a cron expression');
+        return;
+      }
+
+      const job = new Cron(trimmedExpression);
+
+      const next = job.nextRun(); //for next execution time
+
+      if (!next) {
+        throw new Error('Unable to calculate next run');
+      }
+
+
+      const formattedNext = next.toLocaleString('en-US', {
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        dateStyle: 'full',
+        timeStyle: 'long'
+      });
+
+      const frequencyDescription = generateFrequencyDescription(trimmedExpression);
+
+      setNextExecution(formattedNext);
+      setFrequency(frequencyDescription);
+      setError('');
+    } catch (err) {
+      setError('Invalid cron expression');
+      setNextExecution(null);
+      setFrequency('');
+    }
+  };
+
+  // Generate human-readable frequency description
+  const generateFrequencyDescription = (expression: string): string => {
+
+    const parts = expression.split(/\s+/);
+
+    if (parts.length < 5 || parts.length > 6) {
+      return 'Unable to describe frequency';
+    }
+
+    const [minute, hour, dayOfMonth, month, dayOfWeek] =
+      parts.length === 6 ? parts.slice(1) : parts;
+
+    const desc: string[] = [];
+    const dayNames: string[] = [
+      'Sunday', 'Monday', 'Tuesday', 'Wednesday',
+      'Thursday', 'Friday', 'Saturday'
+    ];
+
+    // Minutes description
+    if (minute === '*') desc.push('Every minute');
+    else if (minute.includes(',')) desc.push(`At minute(s) ${minute}`);
+    else if (minute.includes('/')) desc.push(`Every ${minute.split('/')[1]} minute(s)`);
+    else desc.push(`At minute ${minute}`);
+
+    // Hours description
+    if (hour === '*') desc.push('of every hour');
+    else if (hour.includes(',')) desc.push(`at ${hour}:00`);
+    else if (hour.includes('/')) desc.push(`every ${hour.split('/')[1]} hour(s)`);
+    else desc.push(`at ${hour}:00`);
+
+    // Day of month description
+    if (dayOfMonth === '*') desc.push('every day');
+    else if (dayOfMonth.includes(',')) desc.push(`on days ${dayOfMonth}`);
+    else desc.push(`on day ${dayOfMonth}`);
+
+    // Month description
+    if (month === '*') desc.push('of every month');
+    else if (month.includes(',')) desc.push(`in months ${month}`);
+    else desc.push(`in month ${month}`);
+
+    // Day of week description
+    if (dayOfWeek !== '*') {
+      const weekDays = dayOfWeek.split(',').map(day => {
+        const num = parseInt(day);
+        return !isNaN(num) ? dayNames[num] : day;
+      });
+      desc.push(`on ${weekDays.join(', ')}`);
+    }
+
+    return desc.join(' ');
+  };
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+    <Card className="w-full max-w-md mx-auto">
+      <CardHeader>
+        <CardTitle>Cron Expression Next Execution</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="cron-input">Cron Expression</Label>
+            <Input
+              id="cron-input"
+              value={cronExpression}
+              onChange={(e) => setCronExpression(e.target.value)}
+              placeholder="Enter cron expression (e.g., * * * * *)"
+              className="mt-2"
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            <p className="text-xs text-gray-500 mt-1">
+              Format: minute hour day-of-month month day-of-week
+            </p>
+          </div>
+
+          <Button
+            onClick={convertCronToNextExecution}
+            className="w-full"
           >
-            Read our docs
-          </a>
+            Find Next Execution
+          </Button>
+
+          {error && (
+            <div className="text-red-500 text-sm">
+              {error}
+            </div>
+          )}
+
+          {nextExecution && (
+            <div className="space-y-2">
+              <div>
+                <Label>Frequency</Label>
+                <div className="mt-1 p-2 bg-gray-100 rounded text-sm">
+                  {frequency}
+                </div>
+              </div>
+
+              <div>
+                <Label>Next Execution</Label>
+                <div className="mt-1 p-3 bg-gray-100 rounded">
+                  {nextExecution}
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Time Zone: {Intl.DateTimeFormat().resolvedOptions().timeZone}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+
+        <div className="mt-4 text-xs text-gray-600">
+          <h3 className="font-semibold mb-2">Cron Expression Examples:</h3>
+          <ul className="list-disc list-inside">
+            <li>* * * * * - Every minute</li>
+            <li>0 * * * * - Every hour</li>
+            <li>0 0 * * * - Every day at midnight</li>
+            <li>0 0 1 * * - First day of every month</li>
+          </ul>
+        </div>
+      </CardContent>
+    </Card>
   );
-}
+};
+
+export default CronConverter;
