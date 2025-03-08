@@ -101,72 +101,75 @@ const CronConverter: React.FC = () => {
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto">
-      <CardHeader>
-        <CardTitle>Cron Expression Next Execution</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="cron-input">Cron Expression</Label>
-            <Input
-              id="cron-input"
-              value={cronExpression}
-              onChange={(e) => setCronExpression(e.target.value)}
-              placeholder="Enter cron expression (e.g., * * * * *)"
-              className="mt-2"
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Format: minute hour day-of-month month day-of-week
-            </p>
+    <div className='flex justify-center items-center h-screen'>
+
+      <Card className="w-full  max-w-md bg-gray-950 text-white mx-auto">
+        <CardHeader>
+          <CardTitle>Cron Converter</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="cron-input">Cron Expression</Label>
+              <Input
+                id="cron-input"
+                value={cronExpression}
+                onChange={(e) => setCronExpression(e.target.value)}
+                placeholder="Enter cron expression (e.g., * * * * *)"
+                className="mt-4"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Format: minute hour day-of-month month day-of-week
+              </p>
+            </div>
+
+            <Button
+              onClick={convertCronToNextExecution}
+              className="w-full bg-gray-800 hover:bg-gray-900 hover:shadow-md"
+            >
+              Find Next Execution
+            </Button>
+
+            {error && (
+              <div className="text-red-500 text-sm">
+                {error}
+              </div>
+            )}
+
+            {nextExecution && (
+              <div className="space-y-6">
+                <div>
+                  <Label>Frequency</Label>
+                  <div className="mt-2 p-2 bg-gray-100 text-black rounded text-sm">
+                    {frequency}
+                  </div>
+                </div>
+
+                <div>
+                  <Label>Next Execution</Label>
+                  <div className="mt-2 p-3 bg-gray-100 text-black rounded">
+                    {nextExecution}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Time Zone: {Intl.DateTimeFormat().resolvedOptions().timeZone}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
-          <Button
-            onClick={convertCronToNextExecution}
-            className="w-full"
-          >
-            Find Next Execution
-          </Button>
-
-          {error && (
-            <div className="text-red-500 text-sm">
-              {error}
-            </div>
-          )}
-
-          {nextExecution && (
-            <div className="space-y-2">
-              <div>
-                <Label>Frequency</Label>
-                <div className="mt-1 p-2 bg-gray-100 rounded text-sm">
-                  {frequency}
-                </div>
-              </div>
-
-              <div>
-                <Label>Next Execution</Label>
-                <div className="mt-1 p-3 bg-gray-100 rounded">
-                  {nextExecution}
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  Time Zone: {Intl.DateTimeFormat().resolvedOptions().timeZone}
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="mt-4 text-xs text-gray-600">
-          <h3 className="font-semibold mb-2">Cron Expression Examples:</h3>
-          <ul className="list-disc list-inside">
-            <li>* * * * * - Every minute</li>
-            <li>0 * * * * - Every hour</li>
-            <li>0 0 * * * - Every day at midnight</li>
-            <li>0 0 1 * * - First day of every month</li>
-          </ul>
-        </div>
-      </CardContent>
-    </Card>
+          <div className="mt-4 text-xs text-gray-600">
+            <h3 className="font-semibold mb-2">Cron Expression Examples:</h3>
+            <ul className="list-disc list-inside">
+              <li>* * * * * - Every minute</li>
+              <li>0 * * * * - Every hour</li>
+              <li>0 0 * * * - Every day at midnight</li>
+              <li>0 0 1 * * - First day of every month</li>
+            </ul>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
