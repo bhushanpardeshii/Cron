@@ -42,6 +42,7 @@ const CronConverter: React.FC = () => {
       setFrequency(frequencyDescription);
       setError('');
     } catch (err) {
+      console.log(err);
       setError('Invalid cron expression');
       setNextExecution(null);
       setFrequency('');
